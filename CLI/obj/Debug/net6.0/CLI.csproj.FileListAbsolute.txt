@@ -28,3 +28,4 @@ C:\Users\user\Desktop\CLI\CLI\obj\Debug\net6.0\refint\CLI.dll
 C:\Users\user\Desktop\CLI\CLI\obj\Debug\net6.0\CLI.pdb
 C:\Users\user\Desktop\CLI\CLI\obj\Debug\net6.0\CLI.genruntimeconfig.cache
 C:\Users\user\Desktop\CLI\CLI\obj\Debug\net6.0\ref\CLI.dll
+C:\Users\user\Desktop\CLI\CLI\obj\Debug\net6.0\CLI.sourcelink.json
