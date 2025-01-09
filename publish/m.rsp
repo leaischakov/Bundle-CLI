@@ -1,0 +1,1 @@
+bundle --language txt --output sosi.txt --note True --sort name --remove-empty-lines False --author "sos"

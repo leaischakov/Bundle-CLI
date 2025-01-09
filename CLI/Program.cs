@@ -1,18 +1,26 @@
 ﻿
 using System.CommandLine;
 
-var languageOption = new Option<string[]>("--language",description: "רשימת שפות תכנות (או 'all')"){
-    IsRequired = true};
+var languageOption = new Option<string[]>("--language", description: "רשימת שפות תכנות (או 'all')") {
+    IsRequired = true,
+};
+languageOption.AddAlias("-l");
+
 
 var outputOption = new Option<FileInfo>("--output",description: "שם קובץ ה-bundle המיוצא", getDefaultValue: () => new FileInfo("bundled_code.txt"));
+outputOption.AddAlias("-o");
 
 var noteOption = new Option<bool>("--note",description: "האם לרשום את מקור הקוד כהערה בקובץ");
+noteOption.AddAlias("-n");
 
 var sortOption = new Option<string>("--sort",() => "name","סדר העתקת קבצי הקוד (name או type)");
+sortOption.AddAlias("-s");
 
 var removeEmptyLinesOption = new Option<bool>("--remove-empty-lines",description: "האם למחוק שורות ריקות");
+removeEmptyLinesOption.AddAlias("-r");
 
 var authorOption = new Option<string>("--author",description: "שם יוצר הקובץ",getDefaultValue: () => "Unknown Author");
+authorOption.AddAlias("-a");
 
 // יצירת פקודת bundle
 var bundleCommand = new Command("bundle", "אריזת קבצי קוד לקובץ אחד")
@@ -68,12 +76,12 @@ bundleCommand.SetHandler(
 
             writer.WriteLine("// Bundled Code Ends Here");
 
-            Console.WriteLine("פקודת bundle בוצעה בהצלחה!");
-            Console.WriteLine($"קובץ הפלט נוצר ב: {output.FullName}");
+            Console.WriteLine("bundle command executed successfully!");
+            Console.WriteLine($"The output file is created in: {output.FullName}");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"אירעה שגיאה: {ex.Message}");
+            Console.WriteLine($"An error occurred: {ex.Message}");
         }
     },
     languageOption,
@@ -83,10 +91,66 @@ bundleCommand.SetHandler(
     removeEmptyLinesOption,
     authorOption);
 
+
+// יצירת פקודת create-rsp
+var createRspCommand = new Command("create-rsp", "יוצר קובץ תגובה להרצת פקודת bundle")
+{
+    new Argument<FileInfo?>("file", "שם קובץ ה-rsp שיווצר")
+};
+
+createRspCommand.SetHandler(async (FileInfo? file) =>
+{
+    // אם לא נשלח שם קובץ, השתמש בקובץ ברירת מחדל
+    file ??= new FileInfo("default.rsp");
+
+    try
+    {
+        Console.WriteLine($"Creating response file: {file.FullName}");
+
+        // קליטת ערכים מהמשתמש
+        Console.WriteLine("Type the languages (e.g., csharp, javascript, html or 'all'):");
+        var languages = Console.ReadLine() ?? "all";
+
+        Console.WriteLine("Enter the name of the output file:");
+        var output = Console.ReadLine() ?? "bundled_code.txt";
+
+        Console.WriteLine("Do you want to add comments with the file name? (true/false):");
+        var noteInput = Console.ReadLine();
+        var note = bool.TryParse(noteInput, out var noteResult) ? noteResult : false;
+
+        Console.WriteLine("Sort type (name or type):");
+        var sort = Console.ReadLine() ?? "name";
+
+        Console.WriteLine("Do you want to delete empty lines? (true/false):");
+        var removeEmptyLinesInput = Console.ReadLine();
+        var removeEmptyLines = bool.TryParse(removeEmptyLinesInput, out var removeEmptyLinesResult) ? removeEmptyLinesResult : false;
+
+        Console.WriteLine("The name of the creator:");
+        var author = Console.ReadLine() ?? "Unknown Author";
+
+        // יצירת הפקודה המלאה
+        var bundleCommand = $"bundle --language {languages} --output {output} --note {note} --sort {sort} --remove-empty-lines {removeEmptyLines} --author \"{author}\"";
+
+        // שמירת הפקודה בקובץ
+        await File.WriteAllTextAsync(file.FullName, bundleCommand);
+
+        // הודעה למשתמש
+        Console.WriteLine($"The response file was created successfully: {file.FullName}!");
+        Console.WriteLine($"To run the command: dotnet @{file.FullName}");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"An error occurred: {ex.Message}");
+    }
+}, (System.CommandLine.Binding.IValueDescriptor<FileInfo>)createRspCommand.Arguments[0]);
+
+
+
+
 // יצירת rootCommand והוספת פקודות
 var rootCommand = new RootCommand("כלי CLI לאריזת קבצי קוד")
 {
-    bundleCommand
+    bundleCommand, createRspCommand
 };
 
 // הרצת הפקודה
